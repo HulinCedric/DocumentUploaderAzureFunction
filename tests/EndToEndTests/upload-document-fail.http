@@ -1,0 +1,40 @@
+﻿### Send POST request without json body
+POST http://localhost:7071/api/UploadDocument
+Content-Type: application/json
+
+> {%
+    client.test("Request rejected successfully", function() {
+        client.assert(response.status === 400, "Response status is not 400");
+    });
+%}
+
+### Send POST request with invalid body
+POST http://localhost:7071/api/UploadDocument
+Content-Type: application/json
+
+{
+  "fileName": null
+}
+
+> {%
+    client.test("Request rejected successfully", function() {
+        client.assert(response.status === 400, "Response status is not 400");
+    });
+%}
+
+### Send POST request with invalid base64 file content
+POST http://localhost:7071/api/UploadDocument
+Content-Type: application/json
+
+{
+  "contentType": "image/jpeg",
+  "fileName": "invalid.jpg",
+  "fileCategory": "invoice",
+  "base64FileContent": "invalid base 64 content % %"
+}
+
+> {%
+    client.test("Request rejected successfully", function() {
+        client.assert(response.status === 400, "Response status is not 400");
+    });
+%}

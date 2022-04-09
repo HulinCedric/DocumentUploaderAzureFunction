@@ -1,0 +1,20 @@
+﻿### Send POST request with json body
+POST http://localhost:7071/api/UploadDocument
+Content-Type: application/json
+
+{
+  "contentType": "image/jpeg",
+  "fileName": "example.jpg",
+  "fileCategory": "bill",
+  "base64FileContent": "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="
+}
+
+> {%
+  client.test("Request executed successfully", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+  
+  client.test("Response contains document url", function() {
+    client.assert(response.body.documentUrl, "Document url is not returned");
+  });
+%}
