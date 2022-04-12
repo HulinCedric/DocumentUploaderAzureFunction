@@ -16,18 +16,18 @@ namespace DocumentUploader
         [FunctionName("UploadDocument")]
         public static async Task<IActionResult> UploadDocument(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]
-            UploadDocumentRequest command,
+            UploadDocumentRequest request,
             [Blob(DocumentContainerName, FileAccess.ReadWrite)]
             BlobContainerClient blobContainerClient,
             ILogger log)
         {
             log.LogInformation("Start uploading document");
 
-            var canUploadDocumentErrors = command.CanUploadDocument();
+            var canUploadDocumentErrors = request.CanUploadDocument();
             if (canUploadDocumentErrors.Any())
                 return new BadRequestObjectResult(canUploadDocumentErrors);
 
-            var blobDocument = await command.UploadDocument(blobContainerClient);
+            var blobDocument = await request.UploadDocument(blobContainerClient);
 
             log.LogInformation("End uploading document");
 

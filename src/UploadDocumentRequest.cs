@@ -1,13 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Net.Mime;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using FluentValidation;
 using JetBrains.Annotations;
-using Newtonsoft.Json;
 
 namespace DocumentUploader;
 
@@ -15,10 +14,10 @@ namespace DocumentUploader;
 public class UploadDocumentRequest
 {
     public UploadDocumentRequest(
-        string fileName,
+        string? fileName,
         string fileCategory,
         string contentType,
-        string base64FileContent)
+        string? base64FileContent)
     {
         Base64FileContent = base64FileContent;
         ContentType = contentType;
@@ -26,27 +25,17 @@ public class UploadDocumentRequest
         FileName = fileName;
     }
 
-    public string Base64FileContent { get; }
+    [PublicAPI]
+    public string? Base64FileContent { get; }
 
-    // TODO Replace Guid by hash
-    [JsonIgnore]
-    public string BlobName
-        => $"{FileCategory}/{Guid.NewGuid()}.{GetFileExtension()}";
-
+    [PublicAPI]
     public string ContentType { get; }
 
+    [PublicAPI]
     private string FileCategory { get; }
 
-    private string FileName { get; }
-
-    private string GetFileExtension()
-        => Path.GetExtension(FileName);
-
-    private string GetFileNameWithoutExtension()
-        => Path.GetFileNameWithoutExtension(FileName);
-
-    public byte[] GetFileContent()
-        => Convert.FromBase64String(Base64FileContent);
+    [PublicAPI]
+    private string? FileName { get; }
 
     public IEnumerable<UploadDocumentError> CanUploadDocument()
     {
@@ -64,31 +53,31 @@ public class UploadDocumentRequest
         if (errors.Any())
             throw new InvalidOperationException(string.Join(",", errors.Select(e => e.Error)));
 
+        var fileName = DocumentUploader.FileName.Create(FileName!).Value;
+        var fileContent = DocumentUploader.Base64FileContent.Create(Base64FileContent!).Value;
+        var blobName = $"{FileCategory}/{fileName.GetRandomizedValue()}";
+        var contentType = new ContentType(ContentType);
+        var contentDisposition = new ContentDisposition(DispositionTypeNames.Inline)
+        {
+            FileName = fileName.Value
+        };
 
-        // var service = blobContainerClient.GetParentBlobServiceClient();
-        //
-        // BlobServiceProperties prop = service.GetProperties();
-        // BlobContainerProperties test=     blobContainerClient.GetProperties();
-        //
-        //
-        // prop.DefaultServiceVersion = "2021-04-10";
-
-
-        // service.SetProperties(prop);
-
-        var blobClient = blobContainerClient.GetBlobClient(BlobName);
+        var blobClient = blobContainerClient.GetBlobClient(blobName);
 
         await blobClient.UploadAsync(
-            BinaryData.FromBytes(GetFileContent()),
+            fileContent.GetBinaryValue(),
             new BlobUploadOptions
             {
                 HttpHeaders = new BlobHttpHeaders
                 {
-                    ContentType = ContentType,
-                    ContentDisposition = "attachment; filename=\"" + FileName + "\""
+                    ContentType = contentType.ToString(),
+                    ContentDisposition = contentDisposition.ToString()
+                },
+                Metadata = new Dictionary<string, string>
+                {
+                    { nameof(FileName), fileName.Value }
                 }
             });
-
 
         return blobClient;
     }
@@ -103,26 +92,13 @@ public class UploadDocumentRequest
                 .When(x => x.FileName is not null);
 
             RuleFor(command => command.ContentType).NotEmpty();
+
             RuleFor(command => command.FileCategory).NotEmpty();
-            RuleFor(command => command.Base64FileContent).NotEmpty();
 
-            RuleFor(command => command)
-                .Must(
-                    command =>
-                    {
-                        try
-                        {
-                            command.GetFileContent();
-                        }
-                        catch
-                        {
-                            return false;
-                        }
-
-                        return true;
-                    })
-                .WithName(nameof(Base64FileContent))
-                .WithMessage("'Base64 File Content' must be a valid base 64 string");
+            RuleFor(command => command.Base64FileContent)
+                .NotEmpty()
+                .MustBeValueObject(DocumentUploader.Base64FileContent.Create)
+                .When(x => x.Base64FileContent is not null);
         }
     }
 }
