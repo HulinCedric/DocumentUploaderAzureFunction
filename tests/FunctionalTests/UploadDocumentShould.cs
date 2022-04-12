@@ -19,16 +19,17 @@ public class UploadDocumentShould
         => this.fixture = fixture;
 
     [Fact]
-    public async Task Return_200_with_document_url()
+    public async Task Return_200_with_randomized_document_url()
     {
         // Arrange
-        const string command = @"
-{
+        const string fileName = "invoice.jpg";
+        const string command = $@"
+{{
   ""contentType"": ""image/jpeg"",
-  ""fileName"": ""invoice.jpg"",
+  ""fileName"": ""{fileName}"",
   ""fileCategory"": ""invoice"",
   ""base64FileContent"": ""/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=""
-}";
+}}";
         var requestBody = new StringContent(command, Encoding.UTF8, "application/json");
 
         // Act
@@ -40,6 +41,7 @@ public class UploadDocumentShould
         var reponse = await httpResponse.Content.ReadAsAsync<UploadDocumentResponse>();
         reponse.Should().NotBeNull();
         reponse.DocumentUrl.Should().NotBeNull();
+        reponse.DocumentUrl.AbsoluteUri.Should().NotContain(fileName);
     }
 
     [Fact]

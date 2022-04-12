@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
@@ -27,15 +28,22 @@ public class UploadDocumentRequest
 
     public string Base64FileContent { get; }
 
+    // TODO Replace Guid by hash
     [JsonIgnore]
     public string BlobName
-        => $"{FileCategory}/{FileName}";
+        => $"{FileCategory}/{Guid.NewGuid()}.{GetFileExtension()}";
 
     public string ContentType { get; }
 
     private string FileCategory { get; }
 
     private string FileName { get; }
+
+    private string GetFileExtension()
+        => Path.GetExtension(FileName);
+
+    private string GetFileNameWithoutExtension()
+        => Path.GetFileNameWithoutExtension(FileName);
 
     public byte[] GetFileContent()
         => Convert.FromBase64String(Base64FileContent);
@@ -56,6 +64,18 @@ public class UploadDocumentRequest
         if (errors.Any())
             throw new InvalidOperationException(string.Join(",", errors.Select(e => e.Error)));
 
+
+        // var service = blobContainerClient.GetParentBlobServiceClient();
+        //
+        // BlobServiceProperties prop = service.GetProperties();
+        // BlobContainerProperties test=     blobContainerClient.GetProperties();
+        //
+        //
+        // prop.DefaultServiceVersion = "2021-04-10";
+
+
+        // service.SetProperties(prop);
+
         var blobClient = blobContainerClient.GetBlobClient(BlobName);
 
         await blobClient.UploadAsync(
@@ -64,9 +84,11 @@ public class UploadDocumentRequest
             {
                 HttpHeaders = new BlobHttpHeaders
                 {
-                    ContentType = ContentType
+                    ContentType = ContentType,
+                    ContentDisposition = "attachment; filename=\"" + FileName + "\""
                 }
             });
+
 
         return blobClient;
     }
