@@ -87,18 +87,18 @@ public class UploadDocumentRequest
         public UploadDocumentRequestValidator()
         {
             RuleFor(command => command.FileName)
-                .NotEmpty()
                 .MustBeValueObject(DocumentUploader.FileName.Create)
-                .When(x => x.FileName is not null);
-
+                .When(x => x.FileName is not null)
+                .NotEmpty();
+            
             RuleFor(command => command.ContentType).NotEmpty();
 
             RuleFor(command => command.FileCategory).NotEmpty();
-
+            
             RuleFor(command => command.Base64FileContent)
-                .NotEmpty()
                 .MustBeValueObject(DocumentUploader.Base64FileContent.Create)
-                .When(x => x.Base64FileContent is not null);
+                .When(x => x.Base64FileContent is not null)
+                .NotEmpty();
         }
     }
 }

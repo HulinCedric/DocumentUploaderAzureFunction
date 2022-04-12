@@ -38,17 +38,17 @@ public class UploadDocumentShould
         // Assert
         httpResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var reponse = await httpResponse.Content.ReadAsAsync<UploadDocumentResponse>();
-        reponse.Should().NotBeNull();
-        reponse.DocumentUrl.Should().NotBeNull();
-        reponse.DocumentUrl.AbsoluteUri.Should().NotContain(fileName);
+        var response = await httpResponse.Content.ReadAsAsync<UploadDocumentResponse>();
+        response.Should().NotBeNull();
+        response.DocumentUrl.Should().NotBeNull();
+        response.DocumentUrl.AbsoluteUri.Should().NotContain(fileName);
     }
 
     [Fact]
     public async Task Return_400_when_empty_command_provided()
     {
         // Arrange
-        var command = "{}";
+        var command = @"{}";
         var requestBody = new StringContent(command, Encoding.UTF8, "application/json");
 
         // Act
@@ -59,7 +59,7 @@ public class UploadDocumentShould
 
         var errors = await httpResponse.Content.ReadAsAsync<IReadOnlyCollection<UploadDocumentError>>();
         errors.Should().NotBeNull().And.NotBeEmpty();
-        errors.Should().Contain(error => error.Field == "FileName");
+        errors.Should().Contain(error => error.Field == "FileName" && error.Error.Contains("must not be empty"));
     }
 
     [Fact]
