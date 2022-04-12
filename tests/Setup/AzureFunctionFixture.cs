@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using Azure.Storage.Blobs;
 using JetBrains.Annotations;
 
@@ -35,7 +36,9 @@ public class AzureFunctionFixture : IDisposable
         if (!success)
             throw new InvalidOperationException("Could not start Azure Functions host.");
 
-        //funcHostProcess.WaitForExit();
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            funcHostProcess.WaitForExit(5000);
 
         Client = new HttpClient
         {
@@ -57,6 +60,5 @@ public class AzureFunctionFixture : IDisposable
 
         funcHostProcess.Dispose();
         Client.Dispose();
-
     }
 }
