@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -97,10 +97,15 @@ public class UploadDocumentRequest
     {
         public UploadDocumentRequestValidator()
         {
-            RuleFor(command => command.FileName).NotEmpty();
+            RuleFor(command => command.FileName)
+                .NotEmpty()
+                .MustBeValueObject(DocumentUploader.FileName.Create)
+                .When(x => x.FileName is not null);
+
             RuleFor(command => command.ContentType).NotEmpty();
             RuleFor(command => command.FileCategory).NotEmpty();
             RuleFor(command => command.Base64FileContent).NotEmpty();
+
             RuleFor(command => command)
                 .Must(
                     command =>
