@@ -75,6 +75,6 @@ public class FileNameShould
         var randomizedFileName = fileName.GetRandomizedValue();
 
         // Then
-        randomizedFileName.Should().Be("7AF4107F61052C91A3A70EA7ADE30587B0A51C26E9AF772F80C793A1BE08E31B.jpg");
+        randomizedFileName.Should().Be("7af4107f61052c91a3a70ea7ade30587b0a51c26e9af772f80c793a1be08e31b.jpg");
     }
 }

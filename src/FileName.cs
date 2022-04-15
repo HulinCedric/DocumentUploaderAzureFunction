@@ -45,18 +45,18 @@ public class FileName : ValueObject
     public string GetRandomizedValue()
         => $"{GetHashString(Value)}{GetFileExtension(Value)}";
 
-    private static byte[] GetHash(string inputString)
+    private static byte[] GetHash(string input)
     {
         using HashAlgorithm algorithm = SHA256.Create();
-        return algorithm.ComputeHash(Encoding.UTF8.GetBytes(inputString));
+        return algorithm.ComputeHash(Encoding.UTF8.GetBytes(input));
     }
 
-    private static string GetHashString(string inputString)
+    private static string GetHashString(string input)
     {
         var sb = new StringBuilder();
-        foreach (var b in GetHash(inputString))
+        foreach (var b in GetHash(input))
             sb.Append(b.ToString("X2"));
 
-        return sb.ToString();
+        return sb.ToString().ToLowerInvariant();
     }
 }
