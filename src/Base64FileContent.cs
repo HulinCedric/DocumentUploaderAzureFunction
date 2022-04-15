@@ -9,18 +9,18 @@ public class Base64FileContent : ValueObject
     private Base64FileContent(string value)
         => Value = value;
 
-    public string Value { get; }
+    private string Value { get; }
 
-    public byte[] GetDecodedValue()
+    private byte[] GetDecodedValue()
         => Convert.FromBase64String(Value);
-    
+
     public BinaryData GetBinaryValue()
         => BinaryData.FromBytes(GetDecodedValue());
 
     private static bool IsBase64String(string input)
     {
         var buffer = new Span<byte>(new byte[input.Length]);
-        return Convert.TryFromBase64String(input, buffer, out var bytesParsed);
+        return Convert.TryFromBase64String(input, buffer, out _);
     }
 
     public static Result<Base64FileContent> Create(string input)

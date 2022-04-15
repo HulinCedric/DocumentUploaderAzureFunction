@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mime;
-using System.Threading.Tasks;
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
 using FluentValidation;
 using JetBrains.Annotations;
 
@@ -15,7 +11,7 @@ public class UploadDocumentRequest
 {
     public UploadDocumentRequest(
         string? fileName,
-        string fileCategory,
+        string? fileCategory,
         string? contentType,
         string? base64FileContent)
     {
@@ -25,19 +21,15 @@ public class UploadDocumentRequest
         FileName = fileName;
     }
 
-    [PublicAPI]
     public string? Base64FileContent { get; }
 
-    [PublicAPI]
     public string? ContentType { get; }
 
-    [PublicAPI]
-    private string FileCategory { get; }
+    public string? FileCategory { get; }
 
-    [PublicAPI]
-    private string? FileName { get; }
+    public string? FileName { get; }
 
-    public IEnumerable<UploadDocumentError> CanUploadDocument()
+    public IEnumerable<UploadDocumentError> Validate()
     {
         var validator = new UploadDocumentRequestValidator();
         var validationResult = validator.Validate(this);
@@ -46,44 +38,6 @@ public class UploadDocumentRequest
 
         return ArraySegment<UploadDocumentError>.Empty;
     }
-
-    public async Task<BlobClient> UploadDocument(BlobContainerClient blobContainerClient)
-    {
-        var errors = CanUploadDocument().ToList();
-        if (errors.Any())
-            throw new InvalidOperationException(string.Join(",", errors.Select(e => e.Error)));
-
-        var fileName = DocumentUploader.FileName.Create(FileName!).Value;
-        var fileContent = DocumentUploader.Base64FileContent.Create(Base64FileContent!).Value;
-        var fileContentType = FileContentType.Create(ContentType!).Value;
-        var blobName = GetBlobName(fileName);
-        var contentDisposition = new ContentDisposition(DispositionTypeNames.Inline)
-        {
-            FileName = fileName.Value
-        };
-
-        var blobClient = blobContainerClient.GetBlobClient(blobName);
-
-        await blobClient.UploadAsync(
-            fileContent.GetBinaryValue(),
-            new BlobUploadOptions
-            {
-                HttpHeaders = new BlobHttpHeaders
-                {
-                    ContentType = fileContentType.Value,
-                    ContentDisposition = contentDisposition.ToString()
-                },
-                Metadata = new Dictionary<string, string>
-                {
-                    { nameof(FileName), fileName.Value }
-                }
-            });
-
-        return blobClient;
-    }
-
-    private string GetBlobName(FileName fileName)
-        => $"{FileCategory.Trim().ToLowerInvariant()}/{fileName.GetRandomizedValue()}";
 
     private class UploadDocumentRequestValidator : AbstractValidator<UploadDocumentRequest>
     {

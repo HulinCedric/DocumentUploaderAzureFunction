@@ -23,15 +23,28 @@ namespace DocumentUploader
         {
             log.LogInformation("Start uploading document");
 
-            var canUploadDocumentErrors = request.CanUploadDocument();
-            if (canUploadDocumentErrors.Any())
-                return new BadRequestObjectResult(canUploadDocumentErrors);
+            var validationErrors = request.Validate();
+            if (validationErrors.Any())
+            {
+                log.LogWarning(
+                    "Invalid upload document request: {@UploadDocumentRequestValidationErrors}",
+                    validationErrors);
+                return new BadRequestObjectResult(validationErrors);
+            }
 
-            var blobDocument = await request.UploadDocument(blobContainerClient);
+            var documentUploader = new DocumentUploaderService(blobContainerClient);
+
+            var document = new Document(
+                FileName.Create(request.FileName!).Value,
+                request.FileCategory!,
+                FileContentType.Create(request.ContentType!).Value,
+                Base64FileContent.Create(request.Base64FileContent!).Value);
+
+            var documentUrl = await documentUploader.Upload(document);
 
             log.LogInformation("End uploading document");
 
-            return new OkObjectResult(new UploadDocumentResponse(blobDocument.Uri));
+            return new OkObjectResult(new UploadDocumentResponse(documentUrl));
         }
     }
 }
