@@ -16,7 +16,7 @@ public class UploadDocumentRequest
     public UploadDocumentRequest(
         string? fileName,
         string fileCategory,
-        string contentType,
+        string? contentType,
         string? base64FileContent)
     {
         Base64FileContent = base64FileContent;
@@ -29,7 +29,7 @@ public class UploadDocumentRequest
     public string? Base64FileContent { get; }
 
     [PublicAPI]
-    public string ContentType { get; }
+    public string? ContentType { get; }
 
     [PublicAPI]
     private string FileCategory { get; }
@@ -55,8 +55,8 @@ public class UploadDocumentRequest
 
         var fileName = DocumentUploader.FileName.Create(FileName!).Value;
         var fileContent = DocumentUploader.Base64FileContent.Create(Base64FileContent!).Value;
+        var fileContentType = FileContentType.Create(ContentType!).Value;
         var blobName = $"{FileCategory}/{fileName.GetRandomizedValue()}";
-        var contentType = new ContentType(ContentType);
         var contentDisposition = new ContentDisposition(DispositionTypeNames.Inline)
         {
             FileName = fileName.Value
@@ -70,7 +70,7 @@ public class UploadDocumentRequest
             {
                 HttpHeaders = new BlobHttpHeaders
                 {
-                    ContentType = contentType.ToString(),
+                    ContentType = fileContentType.Value,
                     ContentDisposition = contentDisposition.ToString()
                 },
                 Metadata = new Dictionary<string, string>
@@ -90,11 +90,14 @@ public class UploadDocumentRequest
                 .MustBeValueObject(DocumentUploader.FileName.Create)
                 .When(x => x.FileName is not null)
                 .NotEmpty();
-            
-            RuleFor(command => command.ContentType).NotEmpty();
+
+            RuleFor(command => command.ContentType)
+                .MustBeValueObject(FileContentType.Create)
+                .When(x => x.FileName is not null)
+                .NotEmpty();
 
             RuleFor(command => command.FileCategory).NotEmpty();
-            
+
             RuleFor(command => command.Base64FileContent)
                 .MustBeValueObject(DocumentUploader.Base64FileContent.Create)
                 .When(x => x.Base64FileContent is not null)
