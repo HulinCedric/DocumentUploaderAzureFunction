@@ -41,7 +41,8 @@ internal class Document
     public IDictionary<string, string> Description
         => new Dictionary<string, string>
         {
-            { nameof(FileName), name.Value }
+            { "Name", name.Value },
+            { "Category", category },
         };
 
     public string Path
