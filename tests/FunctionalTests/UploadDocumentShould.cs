@@ -85,4 +85,29 @@ public class UploadDocumentShould
         errors.Should().NotBeNull().And.NotBeEmpty();
         errors.Should().Contain(error => error.Field == "Base64FileContent");
     }
+    
+    [Fact]
+    public async Task Return_400_when_invalid_contentType()
+    {
+        // Arrange
+        var command = @"
+{
+  ""contentType"": ""invalid_content_type"",
+  ""fileName"": ""invalid.jpg"",
+  ""fileCategory"": ""invoice"",
+  ""base64FileContent"": ""/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=""
+}";
+        var requestBody = new StringContent(command, Encoding.UTF8, "application/json");
+
+        // Act
+        var httpResponse = await fixture.Client.PostAsync(RequestUri, requestBody);
+
+        // Assert
+        httpResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var errors = await httpResponse.Content.ReadAsAsync<IReadOnlyCollection<UploadDocumentError>>();
+        errors.Should().NotBeNull().And.NotBeEmpty();
+        errors.Should().Contain(error => error.Field == "ContentType");
+    }
+
 }

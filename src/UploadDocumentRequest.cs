@@ -56,7 +56,7 @@ public class UploadDocumentRequest
         var fileName = DocumentUploader.FileName.Create(FileName!).Value;
         var fileContent = DocumentUploader.Base64FileContent.Create(Base64FileContent!).Value;
         var fileContentType = FileContentType.Create(ContentType!).Value;
-        var blobName = $"{FileCategory}/{fileName.GetRandomizedValue()}";
+        var blobName = GetBlobName(fileName);
         var contentDisposition = new ContentDisposition(DispositionTypeNames.Inline)
         {
             FileName = fileName.Value
@@ -81,6 +81,9 @@ public class UploadDocumentRequest
 
         return blobClient;
     }
+
+    private string GetBlobName(FileName fileName)
+        => $"{FileCategory.Trim().ToLowerInvariant()}/{fileName.GetRandomizedValue()}";
 
     private class UploadDocumentRequestValidator : AbstractValidator<UploadDocumentRequest>
     {
