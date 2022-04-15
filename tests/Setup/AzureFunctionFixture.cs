@@ -38,7 +38,7 @@ public class AzureFunctionFixture : IDisposable
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ||
             RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            funcHostProcess.WaitForExit(5000);
+            funcHostProcess.WaitForExit(10000);
 
         Client = new HttpClient
         {
