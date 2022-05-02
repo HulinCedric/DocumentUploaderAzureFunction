@@ -21,7 +21,7 @@ namespace DocumentUploader
             BlobContainerClient blobContainerClient,
             ILogger log)
         {
-            log.LogInformation("Start uploading document");
+            log.LogInformation("Upload document process starting");
 
             var validationErrors = request.Validate();
             if (validationErrors.Any())
@@ -40,9 +40,11 @@ namespace DocumentUploader
                 FileContentType.Create(request.ContentType!).Value,
                 Base64FileContent.Create(request.Base64FileContent!).Value);
 
+            log.LogInformation("Start uploading document ({DocumentDescription})", document.ToString());
+
             var documentUrl = await documentUploader.Upload(document);
 
-            log.LogInformation("End uploading document");
+            log.LogInformation("End uploading document ({DocumentUrl})", documentUrl);
 
             return new OkObjectResult(new UploadDocumentResponse(documentUrl));
         }

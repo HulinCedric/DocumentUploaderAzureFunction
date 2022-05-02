@@ -59,4 +59,7 @@ public class FileName : ValueObject
 
         return sb.ToString().ToLowerInvariant();
     }
+
+    public override string ToString()
+        => Value;
 }

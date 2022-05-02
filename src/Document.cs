@@ -47,4 +47,7 @@ internal class Document
 
     public string Path
         => $"{category}/{name.GetRandomizedValue()}";
+
+    public override string ToString()
+        => $"Name: {name} - Category: {category}";
 }
